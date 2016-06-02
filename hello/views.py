@@ -34,9 +34,11 @@ def tweets(request):
         ts += timedelta(hours=+9)
         stat[ts.weekday()][ts.hour] += 1
 
-    data = []
+    delta = tweets[0].created_at - tweets[-1].created_at
+    speed = len(tweets) * (24.0*60*60) / delta.total_seconds()
+    response = {'data': [], 'speed': "%.2f" % speed}
     for day, v in enumerate(stat):
         for hour, count in enumerate(v):
-            data.append({'day': day+1, 'hour': hour, 'value': count})
+            response['data'].append({'day': day+1, 'hour': hour, 'value': count})
 
-    return HttpResponse(json.dumps(data), content_type='application/json')
+    return HttpResponse(json.dumps(response), content_type='application/json')
