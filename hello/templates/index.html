@@ -1,58 +1,148 @@
-{% extends "base.html" %}
-{% load staticfiles %}
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+<title>TwiActivity</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="https://d3js.org/d3.v3.js"></script>
+<style>
+  rect.bordered {
+    stroke: #E6E6E6;
+    stroke-width:2px;
+  }
 
-{% block content %}
+  text.mono {
+    font-size: 9pt;
+    font-family: Consolas, courier;
+    fill: #aaa;
+  }
 
-<div class="jumbotron text-center">
-  <div class="container">
-    <a href="/" class="lang-logo">
-      <img src="{% static 'lang-logo.png'%}">
-    </a>
-    <h1>Getting Started with Python on Heroku</h1>
-    <p>This is a sample Python application deployed to Heroku. It's a reasonably simple app - but a good foundation for understanding how to get the most out of the Heroku platform.</p>
-    <a type="button" class="btn btn-lg btn-default" href="https://devcenter.heroku.com/articles/getting-started-with-python"><span class="glyphicon glyphicon-flash"></span> Getting Started with Python</a>
-    <a type="button" class="btn btn-lg btn-primary" href="https://github.com/heroku/python-getting-started"><span class="glyphicon glyphicon-download"></span> Source on GitHub</a>
-  </div>
-</div>
+  text.axis-workweek {
+    fill: #000;
+  }
+
+  text.axis-worktime {
+    fill: #000;
+  }
+</style>
+</head>
+<body>
 <div class="container">
-  <div class="alert alert-info text-center" role="alert">
-    To deploy your own copy, and learn the fundamentals of the Heroku platform, head over to the <a href="https://devcenter.heroku.com/articles/getting-started-with-python" class="alert-link">Getting Started with Python on Heroku</a> tutorial.
-  </div>
-  <hr>
-  <div class="row">
-    <div class="col-md-6">
-      <h3><span class="glyphicon glyphicon-info-sign"></span> How this sample app works</h3>
-      <ul>
-        <li>This app was deployed to Heroku, either using Git or by using <a href="https://github.com/heroku/python-getting-started">Heroku Button</a> on the repository.</li>
-
-        <li>When Heroku received the source code, it fetched all the dependencies in the <a href="https://github.com/heroku/python-getting-started/blob/master/requirements.txt">requirements.txt file</a>, creating a deployable slug.</li>
-        <li>The platform then spins up a dyno, a lightweight container that provides an isolated environment in which the slug can be mounted and executed.</li>
-        <li>You can scale your app, manage it, and deploy over <a href="https://addons.heroku.com/">150 add-on services</a>, from the Dashboard or CLI.</li>
-      </ul>
-    </div>
-    <div class="col-md-6">
-      <h3><span class="glyphicon glyphicon-link"></span> Next Steps</h3>
-      <ul>
-        <li>If you are following the <a href="https://devcenter.heroku.com/articles/getting-started-with-python">Getting Started</a> guide, then please head back to the tutorial and follow the next steps!</li>
-        <li>If you deployed this app by deploying the Heroku Button, then in a command line shell, run:</li>
-        <ul>
-          <li><code>git clone https://github.com/heroku/python-getting-started.git</code> - this will create a local copy of the source code for the app</li>
-          <li><code>cd python-getting-started</code> - change directory into the local source code repository</li>
-          <li><code>heroku git:remote -a &lt;your-app-name></code> - associate the Heroku app with the repository</li>
-          <li>You'll now be set up to run the app locally, or <a href="https://devcenter.heroku.com/articles/getting-started-with-python#push-local-changes">deploy changes</a> to Heroku</li>
-        </ul>
-      </ul>
-      <h3><span class="glyphicon glyphicon-link"></span> Helpful Links</h3>
-      <ul>
-        <li><a href="https://www.heroku.com/home">Heroku</a></li>
-        <li><a href="https://devcenter.heroku.com/">Heroku Dev Center</a></li>
-        <li><a href="https://devcenter.heroku.com/articles/getting-started-with-python">Getting Started with Python on Heroku</a></li>
-        <li><a href="https://devcenter.heroku.com/articles/django-app-configuration">Configuring Django Apps for Heroku</a></li>
-      </ul>
-    </div>
-  </div> <!-- row -->
-   <div class="alert alert-info text-center" role="alert">
-    Please do work through the Getting Started guide, even if you do know how to build such an application.  The guide covers the basics of working with Heroku, and will familiarize you with all the concepts you need in order to build and deploy your own apps.
-  </div>
+<div class="page-header">
+  <h1>TwiActivity <small>直近200件のツイート時刻を可視化</h1>
 </div>
-{% endblock %}
+<form class="form-inline" onsubmit="heatmapChart(this.screen_name.value); return false">
+  <input type="text" class="form-control" name="screen_name" placeholder="username">
+  <input class="btn btn-default" type="submit" value="表示する">
+</form>
+<div id="chart"></div>
+<footer><p>Created by <a href="https://twitter.com/inaz2">@inaz2</a></footer>
+<script type="text/javascript">
+  var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+      width = 960 - margin.left - margin.right,
+      height = 430 - margin.top - margin.bottom,
+      gridSize = Math.floor(width / 24),
+      legendElementWidth = gridSize*2,
+      buckets = 9,
+      colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+      days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      times = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
+      datasets = ["data.tsv", "data2.tsv"];
+
+  var svg = d3.select("#chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var dayLabels = svg.selectAll(".dayLabel")
+      .data(days)
+      .enter().append("text")
+        .text(function (d) { return d; })
+        .attr("x", 0)
+        .attr("y", function (d, i) { return i * gridSize; })
+        .style("text-anchor", "end")
+        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+
+  var timeLabels = svg.selectAll(".timeLabel")
+      .data(times)
+      .enter().append("text")
+        .text(function(d) { return d; })
+        .attr("x", function(d, i) { return i * gridSize; })
+        .attr("y", 0)
+        .style("text-anchor", "middle")
+        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+  var heatmapChart = function(screen_name) {
+    if (!(/^\w+$/.test(screen_name))) {
+      alert("無効なアカウント名です。");
+      return;
+    }
+    $.ajax({
+      type: "GET",
+      url: "/tweets?screen_name=" + screen_name,
+      dataType: "json",
+      success: function(response) {
+        var data = response;
+
+        var colorScale = d3.scale.quantile()
+            .domain([0, buckets - 1, d3.max(data, function (d) { return d.value; })])
+            .range(colors);
+
+        var cards = svg.selectAll(".hour")
+            .data(data, function(d) {return d.day+':'+d.hour;});
+
+        cards.append("title");
+
+        cards.enter().append("rect")
+            .attr("x", function(d) { return (d.hour) * gridSize; })
+            .attr("y", function(d) { return (d.day - 1) * gridSize; })
+            .attr("rx", 4)
+            .attr("ry", 4)
+            .attr("class", "hour bordered")
+            .attr("width", gridSize)
+            .attr("height", gridSize)
+            .style("fill", colors[0]);
+
+        cards.transition().duration(1000)
+            .style("fill", function(d) { return colorScale(d.value); });
+
+        cards.select("title").text(function(d) { return d.value; });
+
+        cards.exit().remove();
+
+        var legend = svg.selectAll(".legend")
+            .data([0].concat(colorScale.quantiles()), function(d) { return d; });
+
+        legend.enter().append("g")
+            .attr("class", "legend");
+
+        legend.append("rect")
+          .attr("x", function(d, i) { return legendElementWidth * i; })
+          .attr("y", height)
+          .attr("width", legendElementWidth)
+          .attr("height", gridSize / 2)
+          .style("fill", function(d, i) { return colors[i]; });
+
+        legend.append("text")
+          .attr("class", "mono")
+          .text(function(d) { return "≥ " + Math.round(d); })
+          .attr("x", function(d, i) { return legendElementWidth * i; })
+          .attr("y", height + gridSize);
+
+        legend.exit().remove();
+      },
+      error: function(rs, e) {
+        alert("サーバーエラー");
+      }
+    });
+  };
+</script>
+</div>
+</body>
+</html>
